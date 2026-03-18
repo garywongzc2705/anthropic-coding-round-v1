@@ -1,4 +1,5 @@
 import time
+from collections import deque
 
 
 # Anthropic — Staff Engineer · Incremental Coding Round #2
@@ -53,12 +54,56 @@ class Client:
         self._sync_window()
 
 
-class RateLimiter:
+class SlidingWindowClient:
     def __init__(self, max_requests: int, window_seconds: int):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.clock = time.time
+        self.requests = deque()
+
+    def allow(self):
+        self._sync_window()
+        if len(self.requests) < self.max_requests:
+            self.requests.append(self.clock())
+            return True
+        return False
+
+    def remaining(self):
+        self._sync_window()
+        return max(0, self.max_requests - len(self.requests))
+
+    def reset_in(self):
+        if len(self.requests) == 0:
+            return self.window_seconds
+
+        if len(self.requests) < self.max_requests:
+            return 0.0
+
+        # len(self.requests) == self.max_requests
+        expiration_time = self.requests[0] + self.window_seconds
+        return max(0, round(expiration_time - self.clock(), 3))
+
+    def _sync_window(self):
+        now = self.clock()
+        while len(self.requests) > 0 and self.requests[0] + self.window_seconds <= now:
+            self.requests.popleft()
+
+    def set_clock(self, fn):
+        self.clock = fn
+        self._sync_window()
+
+    def set_limit(self, new_limit):
+        self.max_requests = new_limit
+        self._sync_window()
+
+
+class RateLimiter:
+    def __init__(self, max_requests: int, window_seconds: int, mode="fixed"):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self.clients = {}
         self.clock = time.time
+        self.mode = mode
 
     def allow(self, key):
         return self._get_client(key).allow()
@@ -71,7 +116,10 @@ class RateLimiter:
 
     def _get_client(self, key):
         if not key in self.clients:
-            new_client = Client(self.max_requests, self.window_seconds)
+            if self.mode == "fixed":
+                new_client = Client(self.max_requests, self.window_seconds)
+            else:
+                new_client = SlidingWindowClient(self.max_requests, self.window_seconds)
             new_client.set_clock(self.clock)
             self.clients[key] = new_client
         return self.clients[key]
