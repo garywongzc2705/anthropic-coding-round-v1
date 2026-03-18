@@ -1,6 +1,6 @@
 import time
 from collections import deque
-
+from typing import Protocol
 
 # Anthropic — Staff Engineer · Incremental Coding Round #2
 # solution.py
@@ -14,7 +14,17 @@ from collections import deque
 # --- LEVEL 1 APPROACH ---
 # (your design notes here)
 # -------------------------
-class Client:
+
+
+class ClientProtocol(Protocol):
+    def allow(self) -> bool: ...
+    def remaining(self) -> int: ...
+    def reset_in(self) -> float: ...
+    def set_clock(self, fn) -> None: ...
+    def set_limit(self, new_limit: int) -> None: ...
+
+
+class Client(ClientProtocol):
     def __init__(self, max_requests: int, window_seconds: int):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
@@ -54,7 +64,7 @@ class Client:
         self._sync_window()
 
 
-class SlidingWindowClient:
+class SlidingWindowClient(ClientProtocol):
     def __init__(self, max_requests: int, window_seconds: int):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
