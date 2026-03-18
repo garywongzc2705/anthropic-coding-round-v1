@@ -33,15 +33,18 @@ Semantics:
 """
 
 import pytest
-from solution import RateLimiter
+from solution_level1 import RateLimiter
 
 
 def make_clock(start=0.0):
     t = [start]
+
     def clock():
         return t[0]
+
     def advance(seconds):
         t[0] += seconds
+
     return clock, advance
 
 
@@ -54,6 +57,7 @@ def limiter():
 
 
 # --- Basic allow/deny ---
+
 
 def test_first_request_allowed(limiter):
     assert limiter.allow() is True
@@ -94,6 +98,7 @@ def test_single_request_limit():
 
 
 # --- Window reset ---
+
 
 def test_window_reset_allows_new_requests():
     clock, advance = make_clock()
@@ -139,6 +144,7 @@ def test_request_at_exact_boundary_is_new_window():
 
 
 # --- remaining() ---
+
 
 def test_remaining_starts_at_max():
     clock, _ = make_clock()
@@ -187,6 +193,7 @@ def test_remaining_does_not_consume_slot():
 
 
 # --- reset_in() ---
+
 
 def test_reset_in_full_window_at_start():
     clock, _ = make_clock(start=0.0)

@@ -21,6 +21,7 @@ class RateLimiter:
         self.clock = time.time
         self.current_window_idx = -1
         self.request_count = 0
+        self.clients = {}
 
     def allow(self):
         self._sync_window()
