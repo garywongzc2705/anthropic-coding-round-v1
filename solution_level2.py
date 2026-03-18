@@ -20,7 +20,6 @@ class Client:
         self.clock = time.time
         self.current_window_idx = -1
         self.request_count = 0
-        self.clients = {}
 
     def allow(self):
         self._sync_window()
@@ -47,6 +46,10 @@ class Client:
 
     def set_clock(self, fn):
         self.clock = fn
+        self._sync_window()
+
+    def set_limit(self, new_limit):
+        self.max_requests = new_limit
         self._sync_window()
 
 
@@ -77,3 +80,7 @@ class RateLimiter:
         self.clock = fn
         for client in self.clients.values():
             client.set_clock(fn)
+
+    def set_limit(self, key, new_limit):
+        client = self._get_client(key)
+        client.set_limit(new_limit)
