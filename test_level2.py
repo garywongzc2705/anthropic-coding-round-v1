@@ -19,19 +19,23 @@ Semantics:
 """
 
 import pytest
-from solution import RateLimiter
+from solution_level2 import RateLimiter
 
 
 def make_clock(start=0.0):
     t = [start]
+
     def clock():
         return t[0]
+
     def advance(seconds):
         t[0] += seconds
+
     return clock, advance
 
 
 # --- Basic per-key isolation ---
+
 
 def test_different_keys_are_independent():
     clock, _ = make_clock()
@@ -83,6 +87,7 @@ def test_reset_in_per_key_same_window():
 
 # --- Window reset per key ---
 
+
 def test_window_reset_per_key():
     clock, advance = make_clock()
     r = RateLimiter(max_requests=2, window_seconds=60)
@@ -106,6 +111,7 @@ def test_window_reset_does_not_affect_other_keys():
 
 
 # --- Multiple keys, multiple windows ---
+
 
 def test_many_keys():
     clock, _ = make_clock()
